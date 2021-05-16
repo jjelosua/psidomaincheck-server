@@ -1,0 +1,56 @@
+version: '3.8'
+
+networks:
+  network1:
+    external: false
+    name: psidomaincheck-net
+
+volumes:
+  data-volume:
+
+services:
+
+  psidomaincheck-server:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: psidomaincheck-server
+    depends_on:
+      - mongo-a
+    links:
+      - mongo-a
+    ports:
+      - 443:443
+      - 80:80
+    tty: true
+    environment:
+      ### MongoDB
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      MONGO_INITDB_HOST: ${MONGO_INITDB_HOST}
+      MONGO_INITDB_PORT: ${MONGO_INITDB_PORT}
+      MONGO_INITDB_AUTHENTICATION_DATABASE: ${MONGO_INITDB_AUTHENTICATION_DATABASE}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      ### server
+      SERVER_KEY: ${SERVER_KEY}
+    networks:
+      - network1
+    volumes:
+      - ./app:/app
+
+  mongo-a:
+    image: mongo
+    ports:
+      - "27017:27017"
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_AUTHENTICATION_DATABASE: ${MONGO_INITDB_AUTHENTICATION_DATABASE}
+      COMPOSE_CONVERT_WINDOWS_PATHS: 1
+    networks:
+      - network1
+    hostname: mongo-a
+    volumes:
+      - ./seed_mongo_data.sh:/docker-entrypoint-initdb.d/seed_mongo_data.sh
+      - ./data/fixtures:/fixtures
