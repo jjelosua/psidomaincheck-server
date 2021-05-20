@@ -57,6 +57,10 @@ services:
     volumes:
       - ./seed_mongo_data.sh:/docker-entrypoint-initdb.d/seed_mongo_data.sh
       - ./data/fixtures:/fixtures
+      - psidomaincheck_feed:/data/db
+
+volumes:
+  psidomaincheck_feed:
 
 networks:
   traefik-public:

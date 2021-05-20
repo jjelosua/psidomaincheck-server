@@ -14,7 +14,7 @@ MONGO_PORT = 27017
 
 # Retrieve stored data for the given prefix
 client = MongoClient(MONGO_URI, MONGO_PORT)
-db = client.kako
+db = client.psidomaincheck
 
 
 class Data(BaseModel):
