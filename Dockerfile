@@ -18,6 +18,6 @@ RUN ldconfig
 COPY server-requirements.txt /tmp/
 RUN pip install --no-cache-dir -r /tmp/server-requirements.txt
 
-# COPY ./app /app
+COPY ./app /app
 WORKDIR /app
-CMD ["/start-reload.sh"]
+# CMD ["/start-reload.sh"]

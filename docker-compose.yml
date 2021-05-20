@@ -1,28 +1,34 @@
 version: '3.8'
 
-networks:
-  network1:
-    external: false
-    name: psidomaincheck-net
-
-volumes:
-  data-volume:
-
 services:
-
-  psidomaincheck-server:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    image: psidomaincheck-server
+  backend:
+    build: ./
+    restart: always
     depends_on:
       - mongo-a
     links:
       - mongo-a
-    ports:
-      - 443:443
-      - 80:80
-    tty: true
+    labels:
+      # Enable Traefik for this specific "backend" service
+      - traefik.enable=true
+      # Define the port inside of the Docker service to use
+      - traefik.http.services.app.loadbalancer.server.port=80
+      # Make Traefik use this domain in HTTP
+      - traefik.http.routers.app-http.entrypoints=http
+      - traefik.http.routers.app-http.rule=Host(`psidomaincheck.es`)
+      # Use the traefik-public network (declared below)
+      - traefik.docker.network=traefik-public
+      # Make Traefik use this domain in HTTPS
+      - traefik.http.routers.app-https.entrypoints=https
+      - traefik.http.routers.app-https.rule=Host(`psidomaincheck.es`)
+      - traefik.http.routers.app-https.tls=true
+      # Use the "le" (Let's Encrypt) resolver
+      - traefik.http.routers.app-https.tls.certresolver=le
+      # https-redirect middleware to redirect HTTP to HTTPS
+      - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.https-redirect.redirectscheme.permanent=true
+      # Middleware to redirect HTTP to HTTPS
+      - traefik.http.routers.app-http.middlewares=https-redirect
     environment:
       ### MongoDB
       MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
@@ -34,12 +40,10 @@ services:
       ### server
       SERVER_KEY: ${SERVER_KEY}
     networks:
-      - network1
-    volumes:
-      - ./app:/app
-
+      - traefik-public
+      - psidomaincheck-net
   mongo-a:
-    image: mongo
+    image: mongo:latest
     ports:
       - "27017:27017"
     restart: always
@@ -47,10 +51,15 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
       MONGO_INITDB_AUTHENTICATION_DATABASE: ${MONGO_INITDB_AUTHENTICATION_DATABASE}
-      COMPOSE_CONVERT_WINDOWS_PATHS: 1
     networks:
-      - network1
+      - psidomaincheck-net
     hostname: mongo-a
     volumes:
       - ./seed_mongo_data.sh:/docker-entrypoint-initdb.d/seed_mongo_data.sh
       - ./data/fixtures:/fixtures
+
+networks:
+  traefik-public:
+    external: true
+  psidomaincheck-net:
+    external: false
