@@ -6,12 +6,15 @@ from bson import ObjectId
 from datetime import datetime, timedelta
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.gzip import GZipMiddleware
 from jose import JWTError, jwt
 from models import db, Data, Token, TokenData, User, UserIn, UserInDB
 from passlib.context import CryptContext
 from pydantic import BaseModel, Field
+from starlette.responses import RedirectResponse
 from typing import Optional
+
 
 # to get a string like this run:
 # openssl rand -hex 32
@@ -29,6 +32,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 
 app = FastAPI()
+app.mount("/public", StaticFiles(directory="static"), name="public")
 
 # Add gzip to improve network bandwith requirements
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -158,9 +162,10 @@ def process_domains(data: Data):
 #TODO get a html page with static elements
 @app.get("/")
 def read_root():
-    b = bytes.fromhex(server_key)
-    a = pysodium.crypto_core_ristretto255_scalar_random()
-    return {"Hello": a.hex(), "key": b.hex()}
+    return RedirectResponse(url="/public/index.html")
+    # b = bytes.fromhex(server_key)
+    # a = pysodium.crypto_core_ristretto255_scalar_random()
+    # return {"Hello": a.hex(), "key": b.hex()}
 
 
 # OAuth2
