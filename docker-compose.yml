@@ -29,6 +29,12 @@ services:
       - traefik.http.middlewares.https-redirect.redirectscheme.permanent=true
       # Middleware to redirect HTTP to HTTPS
       - traefik.http.routers.app-http.middlewares=https-redirect
+      # Configure ratelimit middleware
+      - traefik.http.middlewares.api-ratelimit.ratelimit.average=1
+      - traefik.http.middlewares.api-ratelimit.ratelimit.burst=50
+      - traefik.http.middlewares.api-ratelimit.ratelimit.period=60
+      # Middleware to ratelimit API
+      - traefik.http.routers.app-https.middlewares=api-ratelimit
     environment:
       ### MongoDB
       MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}

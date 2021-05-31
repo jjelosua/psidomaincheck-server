@@ -1,0 +1,12 @@
+{
+  "addons": {
+    "{admin@psidomaincheck.es}": {
+      "updates": [
+        {
+          "version": "0.2",
+          "update_link": "https://psidomaincheck.es/public/extension/psi_domain_check-0.2-fx.xpi"
+        }
+      ]
+    }
+  }
+}
